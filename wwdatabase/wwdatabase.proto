@@ -36,8 +36,6 @@ message Champion {
   google.protobuf.Timestamp date_won = 3;
   optional google.protobuf.Timestamp date_lost = 4;
   string show = 5;
-  optional int32 number_of_reigns = 6;
-  optional int32 days_as_champion = 7;
   optional string previous_champion = 8;
   optional bool current_champion = 9;
 
