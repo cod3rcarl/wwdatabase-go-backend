@@ -1,0 +1,80 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Mutation {
+  createChampion(input: CreateChampionInput!): CreateChampionPayload!
+  updateChampion(input: UpdateChampionInput!): UpdateChampionPayload!
+  deleteChampion(input: DeleteChampionInput!): DeleteChampionPayload!
+}
+
+type Query {
+  champion(
+    titleHolder: String
+    currentChampion: Boolean
+    dateFilter: Date
+    previousChampion: Int
+  ): Champion!
+  champions(filter: String, orderBy: ChampionOrderByInput): ChampionPayload!
+}
+
+scalar Date
+
+type Champion {
+  titleHolder: String!
+  titleHolderNumber: Int
+  titleHolderOrderNumber: Int
+  dateWon: Date!
+  dateLost: Date
+  show: String!
+  numberOfReigns: Int
+  daysAsChampion: Int
+  previousChampion: String
+  currentChampion: Boolean
+}
+
+type ChampionPayload {
+  champions: [Champion!]
+  totalCount: Int
+}
+
+input DeleteChampionInput {
+  id: String!
+}
+
+type CreateChampionPayload {
+  success: Boolean!
+  champion: Champion!
+}
+
+type DeleteChampionPayload {
+  success: Boolean!
+  id: String!
+}
+input CreateChampionInput {
+  titleHolder: String!
+  dateWon: String
+  show: String!
+}
+
+type UpdateChampionPayload {
+  success: Boolean!
+  champion: Champion!
+}
+
+input UpdateChampionInput {
+  titleHolderNumber: Int
+  titleHolderOrderNumber: Int
+  dateLost: Date
+  currentChampion: Boolean
+}
+
+input ChampionOrderByInput {
+  titleHolder: Sort
+  daysAsChampion: Sort
+}
+
+enum Sort {
+  asc
+  desc
+}
