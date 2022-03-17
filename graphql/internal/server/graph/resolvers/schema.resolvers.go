@@ -16,7 +16,7 @@ import (
 func (r *mutationResolver) CreateChampion(ctx context.Context, input model.CreateChampionInput) (*model.CreateChampionPayload, error) {
 	pbChamp, err := r.Server.CreateChampion(ctx, &input)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating champ[ion")
+		return nil, errors.Wrap(err, "Error creating champion")
 	}
 
 	return pbChamp, nil
@@ -29,7 +29,7 @@ func (r *mutationResolver) UpdateChampion(ctx context.Context, input model.Updat
 func (r *mutationResolver) DeleteChampion(ctx context.Context, input model.DeleteChampionInput) (*model.DeleteChampionPayload, error) {
 	pbChamp, err := r.Server.DeleteChampion(ctx, &input)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating champ[ion")
+		return nil, errors.Wrap(err, "Error creating champion")
 	}
 
 	return pbChamp, nil

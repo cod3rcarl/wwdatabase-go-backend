@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +12,9 @@ import (
 
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/client"
 	server "github.com/cod3rcarl/wwdatabase-go-backend/graphql/internal/server"
+	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc"
+	grpcServer "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/server"
+	ww "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/wwdatabase"
 	"github.com/joho/godotenv"
 
 	"github.com/kelseyhightower/envconfig"
@@ -24,9 +28,10 @@ type App struct {
 	shutdown sync.Mutex
 
 	// app dependencies
-	logger   *zap.Logger
-	server   *server.Server
-	wwClient *client.Client
+	logger     *zap.Logger
+	server     *server.Server
+	wwClient   *client.Client
+	grpcServer *grpcServer.Service
 }
 
 const (
@@ -106,11 +111,39 @@ func (a *App) WithServer() *App {
 	return a
 }
 
+func (a *App) WithGRPCServer() *App {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file %v", err)
+	}
+
+	l := grpc.CreateLogger()
+	store := grpc.CreateStorage(l)
+
+	wwdatabaseService := ww.NewService(
+		ww.WithLogger(l),
+		ww.WithStorage(store),
+	)
+	grpcSrv := grpc.CreateGrpcServer(l, store, wwdatabaseService)
+
+	a.grpcServer = grpcSrv
+	return a
+}
+
 func (a *App) Start() {
+	fmt.Println("server")
 	if a.server != nil {
-		if err := a.server.Start(); err != nil {
-			a.logger.Error("server error: %v", zap.Error(err))
-			a.Shutdown()
+		go func() {
+			if err := a.server.Start(); err != nil {
+				a.logger.Error("server error: %v", zap.Error(err))
+				a.Shutdown()
+			}
+		}()
+		if a.grpcServer != nil {
+			fmt.Println("here")
+			if err := a.grpcServer.Start(); err != nil {
+				a.logger.Error("server error: %v", zap.Error(err))
+				a.Shutdown()
+			}
 		}
 	}
 }

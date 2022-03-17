@@ -21,8 +21,8 @@ generate:
 server: ## Run the main application
 	go run grpc/cmd/main.go
 
-client: ## Run the main application
-	go run graphql/cmd/app/main.go
+app: ## Run the main application
+	go run cmd/app/main.go
 
 tidy: ## Tidy up Go modules
 	go mod tidy

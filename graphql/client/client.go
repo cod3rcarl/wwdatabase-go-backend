@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 
-	pb "github.com/cod3rcarl/wwdatabase-go-backend/grpc/pkg/wwdatabase"
+	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

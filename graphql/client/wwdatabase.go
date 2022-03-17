@@ -2,11 +2,10 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/internal/server/graph/model"
-	pb "github.com/cod3rcarl/wwdatabase-go-backend/grpc/pkg/wwdatabase"
+	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -23,14 +22,6 @@ func (s *Client) CreateChampion(ctx context.Context, input *model.CreateChampion
 	if err != nil {
 		return nil, s.handleErr(err)
 	}
-
-	// thon :=
-	// _, err = s.wwdatabaseGRPCClient.UpdateChampion(ctx, &pb.UpdateChampionData{
-	// 	TitleHolderOrderNumber: pbChamp.Champion.TitleHolderOrderNumber,
-	// })
-	// if err != nil {
-	// 	return nil, s.handleErr(err)
-	// }
 
 	return &model.CreateChampionPayload{
 		Success:  pbChamp.Success,
@@ -53,11 +44,33 @@ func (s *Client) DeleteChampion(ctx context.Context, input *model.DeleteChampion
 }
 
 func (s *Client) GetChampions(ctx context.Context, orderBy *model.ChampionOrderByInput, filter *string) (
-	*model.ChampionPayload, error) {
+	*model.ChampionPayload, error,
+) {
+	if filter != nil {
+		pbChamps, err := s.wwdatabaseGRPCClient.GetChampionByName(ctx, &pb.GetChampionByNameRequest{
+			Name: *filter,
+		})
+		if err != nil {
+			return nil, s.handleErr(err)
+		}
 
+		return pbChampionsToModel(pbChamps), nil
+	}
 	pbChamps, err := s.wwdatabaseGRPCClient.GetChampions(ctx, &pb.GetChampionsRequest{})
 	if err != nil {
-		fmt.Println(err.Error())
+		return nil, s.handleErr(err)
+	}
+
+	return pbChampionsToModel(pbChamps), nil
+}
+
+func (s *Client) GetChampionDetailsByName(ctx context.Context, name string) (
+	*model.ChampionPayload, error,
+) {
+	pbChamps, err := s.wwdatabaseGRPCClient.GetChampionByName(ctx, &pb.GetChampionByNameRequest{
+		Name: name,
+	})
+	if err != nil {
 		return nil, s.handleErr(err)
 	}
 
