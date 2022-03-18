@@ -17,6 +17,12 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: mnjghfpgupfubo
+      POSTGRES_DB: d3leb3ukf4fo82
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: ec2-54-155-112-143.eu-west-1.compute.amazonaws.com
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,16 +33,7 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Make envfile
-        uses: SpicyPizza/create-envfile@v1.3
-        with:
-          envkey_POSTGRES_USER: mnjghfpgupfubo
-          envkey_POSTGRES_DB: d3leb3ukf4fo82
-          envkey_POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          envkey_POSTGRES_PORT: 5432
-          envkey_POSTGRES_HOST: ec2-54-155-112-143.eu-west-1.compute.amazonaws.com
-          file_name: .env
-          fail_on_empty: false
+ 
       - name: Fetch required Go modules
         run:  go mod download
 
