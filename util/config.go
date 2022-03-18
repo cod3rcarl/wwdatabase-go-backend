@@ -1,6 +1,9 @@
 package util
 
-import "github.com/spf13/viper"
+import (
+	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
+)
 
 type Config struct {
 	PostgresUser     string `mapstructure:"POSTGRES_USER"`
@@ -13,9 +16,23 @@ type Config struct {
 }
 
 func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
+	var environment string
+	environment = "development"
+	if err = godotenv.Load(); err != nil {
+		environment = "production"
+	}
+
+	if environment == "development" {
+		viper.AddConfigPath(path)
+		viper.SetConfigName("app")
+		viper.SetConfigType("env")
+	}
+
+	if environment == "production" {
+		viper.AddConfigPath(path)
+		viper.SetConfigName("prod")
+		viper.SetConfigType("env")
+	}
 
 	viper.AutomaticEnv()
 
