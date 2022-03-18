@@ -35,7 +35,6 @@ jobs:
           envkey_POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           envkey_POSTGRES_PORT: 5432
           envkey_POSTGRES_HOST: ec2-54-155-112-143.eu-west-1.compute.amazonaws.com
-          directory: app
           file_name: .env
           fail_on_empty: false
       - name: Fetch required Go modules
