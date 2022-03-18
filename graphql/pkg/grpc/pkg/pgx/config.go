@@ -2,28 +2,23 @@ package pgx
 
 import (
 	"fmt"
+	"log"
 
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
+	"github.com/cod3rcarl/wwdatabase-go-backend/util"
 )
 
 type Config struct {
-	DatabaseDSN      string
-	PostgresUSER     string `envconfig:"POSTGRES_USER" required:"true"`
-	PostgresPASSWORD string `envconfig:"POSTGRES_PASSWORD" required:"true"`
-	PostgresDB       string `envconfig:"POSTGRES_DB" required:"true"`
-	PostgresPORT     string `envconfig:"POSTGRES_PORT" required:"true"`
-	PostgresHOST     string `envconfig:"POSTGRES_HOST" required:"true"`
+	DatabaseDSN string
 }
 
-func ReadConfig() (Config, error) {
-	var cfg Config
-	if err := envconfig.Process("", &cfg); err != nil {
-		return Config{}, errors.Errorf("failed to parse config; error=%v", err)
+func ReadConfig() (c Config, err error) {
+	cfg, err := util.LoadConfig("./../../../../../")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
 	}
 
-	cfg.DatabaseDSN = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s",
-		cfg.PostgresUSER, cfg.PostgresPASSWORD, cfg.PostgresHOST, cfg.PostgresPORT, cfg.PostgresDB)
+	c.DatabaseDSN = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s",
+		cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresHost, cfg.PostgresPort, cfg.PostgresDB)
 
-	return cfg, nil
+	return c, nil
 }

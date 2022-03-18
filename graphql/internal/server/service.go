@@ -16,7 +16,7 @@ import (
 )
 
 type Config struct {
-	Port               string   `envconfig:"PORT" default:"8080"`
+	Port               string   `envconfig:"PORT" default:"8181"`
 	CORSAllowedOrigins []string `envconfig:"CORS_ALLOWED_ORIGINS" default:"*"`
 	CORSAllowedHeaders []string `envconfig:"CORS_ALLOWED_HEADERS" default:"Authorization,Content-Type"`
 	CORSAllowedMethods []string `envconfig:"CORS_ALLOWED_METHODS" default:"GET,POST,HEAD,OPTIONS"`

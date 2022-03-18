@@ -17,6 +17,6 @@ RUN CGO_ENABLED=0 go build \
 FROM scratch AS final-image
 
 COPY --from=go-builder /wwdatabase /wwdatabase
-# COPY --from=base /app/.env /.env
+COPY --from=base /app/.env /.env
 
 ENTRYPOINT [ "/wwdatabase" ]

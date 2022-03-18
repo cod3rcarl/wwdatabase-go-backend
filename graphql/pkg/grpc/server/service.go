@@ -7,6 +7,7 @@ import (
 	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/storage"
 	client "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/wwdatabase"
+	"github.com/cod3rcarl/wwdatabase-go-backend/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -16,7 +17,7 @@ import (
 const ServiceName = "grpc-server"
 
 type Service struct {
-	config Config
+	config util.Config
 	server *grpc.Server
 	serviceOptions
 	pb.UnimplementedWwdatabaseServer
@@ -28,7 +29,7 @@ type serviceOptions struct {
 	clientOption
 }
 
-func NewServer(cfg Config, opts ...Option) *Service {
+func NewServer(cfg util.Config, opts ...Option) *Service {
 	srv := grpc.NewServer()
 
 	// register the gRPC server for reflection to expose available endpoints
@@ -66,7 +67,7 @@ func (s *Service) Stop() {
 }
 
 func (s *Service) Start() error {
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", s.config.Host, s.config.Port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", s.config.GRPCServerHost, s.config.GRPCServerPort))
 	if err != nil {
 		return errors.Errorf("failed to listen: %v", err)
 	}

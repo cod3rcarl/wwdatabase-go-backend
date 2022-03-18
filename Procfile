@@ -1,1 +1,1 @@
-web: wwdatabase-go-backend
+web: go run cmd/app/main.go

@@ -1,19 +1,15 @@
 package server
 
 import (
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
+	"log"
+
+	"github.com/cod3rcarl/wwdatabase-go-backend/util"
 )
 
-type Config struct {
-	Host string `envconfig:"GRPC_HOST" required:"true"`
-	Port string `envconfig:"GRPC_PORT" required:"true"`
-}
-
-func ReadConfig() (Config, error) {
-	var cfg Config
-	if err := envconfig.Process("", &cfg); err != nil {
-		return Config{}, errors.Errorf("failed to parse config; error=%v", err)
+func ReadConfig() (util.Config, error) {
+	cfg, err := util.LoadConfig("./../../../../")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
 	}
 
 	return cfg, nil

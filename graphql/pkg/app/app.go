@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -15,7 +14,7 @@ import (
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc"
 	grpcServer "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/server"
 	ww "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/wwdatabase"
-	"github.com/joho/godotenv"
+	"github.com/cod3rcarl/wwdatabase-go-backend/util"
 
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
@@ -66,18 +65,24 @@ func (a *App) WithLogger() *App {
 }
 
 func (a *App) WithClient() *App {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file %v", err)
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Fatalf("Error loading .env file %v", err)
+	// }
+
 	if a.logger == nil {
 		log.Fatalf("logger is a server dependency and cannot be nil")
 	}
 
-	var cfg client.Config
+	// var cfg client.Config
 
-	if err := envconfig.Process("", &cfg); err != nil {
-		a.logger.Fatal("failed to parse client config", zap.Error(err))
+	cfg, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
 	}
+
+	// if err := envconfig.Process("", &cfg); err != nil {
+	// 	a.logger.Fatal("failed to parse client config", zap.Error(err))
+	// }
 	c, err := client.NewClient(a.logger, cfg)
 	if err != nil {
 		log.Fatalf("client is a server dependency and cannot be nil")
@@ -112,10 +117,6 @@ func (a *App) WithServer() *App {
 }
 
 func (a *App) WithGRPCServer() *App {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file %v", err)
-	}
-
 	l := grpc.CreateLogger()
 	store := grpc.CreateStorage(l)
 
@@ -126,11 +127,11 @@ func (a *App) WithGRPCServer() *App {
 	grpcSrv := grpc.CreateGrpcServer(l, store, wwdatabaseService)
 
 	a.grpcServer = grpcSrv
+
 	return a
 }
 
 func (a *App) Start() {
-	fmt.Println("server")
 	if a.server != nil {
 		go func() {
 			if err := a.server.Start(); err != nil {
@@ -139,7 +140,6 @@ func (a *App) Start() {
 			}
 		}()
 		if a.grpcServer != nil {
-			fmt.Println("here")
 			if err := a.grpcServer.Start(); err != nil {
 				a.logger.Error("server error: %v", zap.Error(err))
 				a.Shutdown()

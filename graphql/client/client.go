@@ -4,15 +4,11 @@ import (
 	"fmt"
 
 	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
+	"github.com/cod3rcarl/wwdatabase-go-backend/util"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-type Config struct {
-	GRPCServerHost string `envconfig:"GRPC_HOST" required:"true"`
-	GRPCServerPort string `envconfig:"GRPC_PORT" required:"true"`
-}
 
 type Client struct {
 	logger               *zap.Logger
@@ -20,7 +16,7 @@ type Client struct {
 	wwdatabaseGRPCClient pb.WwdatabaseClient
 }
 
-func NewClient(l *zap.Logger, cfg Config) (Client, error) {
+func NewClient(l *zap.Logger, cfg util.Config) (Client, error) {
 	client := Client{
 		logger: l,
 	}
