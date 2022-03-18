@@ -18,6 +18,5 @@ FROM scratch AS final-image
 
 COPY --from=go-builder /wwdatabase /wwdatabase
 
-COPY --from=base /app/.env /.env
 
 ENTRYPOINT [ "/wwdatabase" ]
