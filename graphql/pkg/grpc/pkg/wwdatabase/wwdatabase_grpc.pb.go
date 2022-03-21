@@ -26,7 +26,7 @@ type WwdatabaseClient interface {
 	GetChampionByName(ctx context.Context, in *GetChampionByNameRequest, opts ...grpc.CallOption) (*ChampionsList, error)
 	GetCurrentChampion(ctx context.Context, in *GetCurrentChampionRequest, opts ...grpc.CallOption) (*ChampionResponse, error)
 	GetChampionByDate(ctx context.Context, in *GetChampionByDateRequest, opts ...grpc.CallOption) (*ChampionResponse, error)
-	GetPreviousChampion(ctx context.Context, in *PreviousChampionNumber, opts ...grpc.CallOption) (*ChampionResponse, error)
+	GetChampionByOrderNumber(ctx context.Context, in *ChampionNumber, opts ...grpc.CallOption) (*ChampionResponse, error)
 	AddChampion(ctx context.Context, in *NewChampionData, opts ...grpc.CallOption) (*CreateChampionPayload, error)
 	UpdateChampion(ctx context.Context, in *UpdateChampionData, opts ...grpc.CallOption) (*UpdateChampionPayload, error)
 	DeleteChampion(ctx context.Context, in *DeleteChampionRequest, opts ...grpc.CallOption) (*DeleteChampionResponse, error)
@@ -76,9 +76,9 @@ func (c *wwdatabaseClient) GetChampionByDate(ctx context.Context, in *GetChampio
 	return out, nil
 }
 
-func (c *wwdatabaseClient) GetPreviousChampion(ctx context.Context, in *PreviousChampionNumber, opts ...grpc.CallOption) (*ChampionResponse, error) {
+func (c *wwdatabaseClient) GetChampionByOrderNumber(ctx context.Context, in *ChampionNumber, opts ...grpc.CallOption) (*ChampionResponse, error) {
 	out := new(ChampionResponse)
-	err := c.cc.Invoke(ctx, "/wwdatabase.Wwdatabase/GetPreviousChampion", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/wwdatabase.Wwdatabase/GetChampionByOrderNumber", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ type WwdatabaseServer interface {
 	GetChampionByName(context.Context, *GetChampionByNameRequest) (*ChampionsList, error)
 	GetCurrentChampion(context.Context, *GetCurrentChampionRequest) (*ChampionResponse, error)
 	GetChampionByDate(context.Context, *GetChampionByDateRequest) (*ChampionResponse, error)
-	GetPreviousChampion(context.Context, *PreviousChampionNumber) (*ChampionResponse, error)
+	GetChampionByOrderNumber(context.Context, *ChampionNumber) (*ChampionResponse, error)
 	AddChampion(context.Context, *NewChampionData) (*CreateChampionPayload, error)
 	UpdateChampion(context.Context, *UpdateChampionData) (*UpdateChampionPayload, error)
 	DeleteChampion(context.Context, *DeleteChampionRequest) (*DeleteChampionResponse, error)
@@ -143,8 +143,8 @@ func (UnimplementedWwdatabaseServer) GetCurrentChampion(context.Context, *GetCur
 func (UnimplementedWwdatabaseServer) GetChampionByDate(context.Context, *GetChampionByDateRequest) (*ChampionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChampionByDate not implemented")
 }
-func (UnimplementedWwdatabaseServer) GetPreviousChampion(context.Context, *PreviousChampionNumber) (*ChampionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetPreviousChampion not implemented")
+func (UnimplementedWwdatabaseServer) GetChampionByOrderNumber(context.Context, *ChampionNumber) (*ChampionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetChampionByOrderNumber not implemented")
 }
 func (UnimplementedWwdatabaseServer) AddChampion(context.Context, *NewChampionData) (*CreateChampionPayload, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddChampion not implemented")
@@ -240,20 +240,20 @@ func _Wwdatabase_GetChampionByDate_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Wwdatabase_GetPreviousChampion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PreviousChampionNumber)
+func _Wwdatabase_GetChampionByOrderNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChampionNumber)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WwdatabaseServer).GetPreviousChampion(ctx, in)
+		return srv.(WwdatabaseServer).GetChampionByOrderNumber(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/wwdatabase.Wwdatabase/GetPreviousChampion",
+		FullMethod: "/wwdatabase.Wwdatabase/GetChampionByOrderNumber",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WwdatabaseServer).GetPreviousChampion(ctx, req.(*PreviousChampionNumber))
+		return srv.(WwdatabaseServer).GetChampionByOrderNumber(ctx, req.(*ChampionNumber))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -336,8 +336,8 @@ var Wwdatabase_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Wwdatabase_GetChampionByDate_Handler,
 		},
 		{
-			MethodName: "GetPreviousChampion",
-			Handler:    _Wwdatabase_GetPreviousChampion_Handler,
+			MethodName: "GetChampionByOrderNumber",
+			Handler:    _Wwdatabase_GetChampionByOrderNumber_Handler,
 		},
 		{
 			MethodName: "AddChampion",

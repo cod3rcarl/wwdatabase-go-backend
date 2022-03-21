@@ -42,6 +42,11 @@ type CreateChampionPayload struct {
 	Champion *Champion `json:"champion"`
 }
 
+type DateRange struct {
+	DateWon  string `json:"dateWon"`
+	DateLost string `json:"dateLost"`
+}
+
 type DeleteChampionInput struct {
 	ID string `json:"id"`
 }

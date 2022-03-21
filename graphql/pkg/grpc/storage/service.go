@@ -17,7 +17,7 @@ type WWDatabaseService interface {
 	GetAllChampions(ctx context.Context) (models.Champions, error)
 	GetChampionListByName(ctx context.Context, name string) (models.Champions, error)
 	AddChampion(ctx context.Context, input models.CreateChampionInput) (models.Champion, error)
-	GetPreviousChampion(ctx context.Context) (models.Champion, error)
+	GetChampionByOrderNumber(ctx context.Context, tn int32) (models.Champion, error)
 	DeleteChampion(ctx context.Context, id string) (string, error)
 }
 

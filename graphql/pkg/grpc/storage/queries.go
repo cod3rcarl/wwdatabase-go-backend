@@ -17,6 +17,7 @@ func (s *Service) GetAllChampions(ctx context.Context) (models.Champions, error)
 		"id",
 		"title_holder",
 		COALESCE("title_holder_number", 0) "title_holder_number",
+		COALESCE("title_holder_order_number", 0) "title_holder_order_number",
 		"date_won",
 		"date_lost",
 		"show",
@@ -36,23 +37,23 @@ func (s *Service) GetAllChampions(ctx context.Context) (models.Champions, error)
 	return champions, nil
 }
 
-func (s *Service) GetPreviousChampion(ctx context.Context) (models.Champion, error) {
+func (s *Service) GetChampionByOrderNumber(ctx context.Context, tn int32) (models.Champion, error) {
 	champion := models.Champion{}
 	query := `
 	SELECT
 		"id",
 		"title_holder",
 		COALESCE("title_holder_number", 0) "title_holder_number",
+		COALESCE("title_holder_order_number", 0) "title_holder_order_number",
 		"date_won",
 		"date_lost",
 		"show",
-		COALESCE("current_champion", false) "current_champion",
-		COALESCE("title_holder_order_number", 0) "title_holder_order_number"
+		COALESCE("current_champion", false) "current_champion"
 	FROM "champion"
-	WHERE  "current_champion" = true
+	WHERE  "title_holder_order_number" = $1
 	;`
 
-	if err := pgxscan.Get(ctx, s.Pool, &champion, query); err != nil {
+	if err := pgxscan.Get(ctx, s.Pool, &champion, query, tn); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Champion{}, wwErrors.ErrNoChampionsReturned
 		}
@@ -70,6 +71,7 @@ func (s *Service) GetChampionListByName(ctx context.Context, name string) (model
 		"id",
 		"title_holder",
 		COALESCE("title_holder_number", 0) "title_holder_number",
+		COALESCE("title_holder_order_number", 0) "title_holder_order_number",
 		"date_won",
 		"date_lost",
 		"show",

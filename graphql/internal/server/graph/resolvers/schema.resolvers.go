@@ -29,18 +29,25 @@ func (r *mutationResolver) UpdateChampion(ctx context.Context, input model.Updat
 func (r *mutationResolver) DeleteChampion(ctx context.Context, input model.DeleteChampionInput) (*model.DeleteChampionPayload, error) {
 	pbChamp, err := r.Server.DeleteChampion(ctx, &input)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating champion")
+		return nil, errors.Wrap(err, "Error deleting champion")
 	}
 
 	return pbChamp, nil
 }
 
 func (r *queryResolver) Champion(ctx context.Context, titleHolder *string, currentChampion *bool, dateFilter *string, previousChampion *int) (*model.Champion, error) {
-	panic(fmt.Errorf("not implemented"))
+	if previousChampion != nil {
+		pbChamp, err := r.Server.GetChampionByOrderNumber(ctx, int32(*previousChampion-1))
+		if err != nil {
+			return nil, errors.Wrap(err, "Error retrieving champion")
+		}
+		return pbChamp, nil
+	}
+	return nil, nil
 }
 
-func (r *queryResolver) Champions(ctx context.Context, filter *string, orderBy *model.ChampionOrderByInput) (*model.ChampionPayload, error) {
-	pbChamp, err := r.Server.GetChampions(ctx, orderBy, filter)
+func (r *queryResolver) Champions(ctx context.Context, filter *string, dateRange *model.DateRange) (*model.ChampionPayload, error) {
+	pbChamp, err := r.Server.GetChampions(ctx, filter)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating champ[ion")
 	}

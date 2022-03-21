@@ -22,7 +22,7 @@ server: ## Run the main application
 	go run grpc/cmd/main.go
 
 app: ## Run the main application
-	go run cmd/app/main.go
+	go run main.go
 
 tidy: ## Tidy up Go modules
 	go mod tidy

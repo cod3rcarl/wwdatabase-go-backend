@@ -15,7 +15,7 @@ type Query {
     dateFilter: Date
     previousChampion: Int
   ): Champion!
-  champions(filter: String, orderBy: ChampionOrderByInput): ChampionPayload!
+  champions(filter: String, dateRange: DateRange): ChampionPayload!
 }
 
 scalar Date
@@ -36,6 +36,11 @@ type Champion {
 type ChampionPayload {
   champions: [Champion!]
   totalCount: Int
+}
+
+input DateRange {
+  dateWon: Date!
+  dateLost: Date!
 }
 
 input DeleteChampionInput {

@@ -20,6 +20,18 @@ func (s *Service) GetChampions(ctx context.Context, req *pb.GetChampionsRequest)
 	return pbMc, nil
 }
 
+func (s *Service) GetChampionByOrderNumber(ctx context.Context, req *pb.ChampionNumber) (
+	*pb.ChampionResponse, error,
+) {
+	s.logger.Info("gRPC call: GetPreviousChampions")
+	pbMc, err := s.wwdatabase.GetChampionByOrderNumber(ctx, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting champ")
+	}
+
+	return pbMc, nil
+}
+
 func (s *Service) GetChampionByName(ctx context.Context, req *pb.GetChampionByNameRequest) (
 	*pb.ChampionsList, error,
 ) {

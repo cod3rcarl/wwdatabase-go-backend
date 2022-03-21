@@ -24,3 +24,10 @@ type CreateChampionInput struct {
 	DateWon     date.NullTime
 	Show        string
 }
+
+type UpdateChampionInput struct {
+	TitleHolderNumber      int32
+	TitleHolderOrderNumber int32
+	CurrentChampion        bool
+	DateLost               date.NullTime
+}

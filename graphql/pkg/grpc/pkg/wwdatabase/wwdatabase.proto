@@ -12,7 +12,7 @@ service Wwdatabase {
   rpc GetChampionByName (GetChampionByNameRequest) returns (ChampionsList) {}
   rpc GetCurrentChampion (GetCurrentChampionRequest) returns (ChampionResponse) {}
   rpc GetChampionByDate (GetChampionByDateRequest) returns (ChampionResponse) {}
-  rpc GetPreviousChampion (PreviousChampionNumber) returns (ChampionResponse) {}
+  rpc GetChampionByOrderNumber (ChampionNumber) returns (ChampionResponse) {}
   rpc AddChampion (NewChampionData) returns (CreateChampionPayload) {}
   rpc UpdateChampion (UpdateChampionData) returns (UpdateChampionPayload) {}
   rpc DeleteChampion (DeleteChampionRequest) returns (DeleteChampionResponse) {}
@@ -41,7 +41,7 @@ message DeleteChampionResponse {
   string id = 1;
 }
 
-message PreviousChampionNumber {
+message ChampionNumber {
   int32 title_holder_order_number = 1;
 }
 
@@ -65,7 +65,8 @@ message Champion {
   google.protobuf.Timestamp date_lost = 5;
   string show = 6;
   bool current_champion = 7;
-  int32 title_holder_order_number = 8;
+  string previous_champion = 8;
+  int32 title_holder_order_number = 9;
 }
 
 message ChampionsList {

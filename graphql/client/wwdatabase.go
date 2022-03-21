@@ -43,7 +43,7 @@ func (s *Client) DeleteChampion(ctx context.Context, input *model.DeleteChampion
 	}, nil
 }
 
-func (s *Client) GetChampions(ctx context.Context, orderBy *model.ChampionOrderByInput, filter *string) (
+func (s *Client) GetChampions(ctx context.Context, filter *string) (
 	*model.ChampionPayload, error,
 ) {
 	if filter != nil {
@@ -77,20 +77,35 @@ func (s *Client) GetChampionDetailsByName(ctx context.Context, name string) (
 	return pbChampionsToModel(pbChamps), nil
 }
 
+func (s *Client) GetChampionByOrderNumber(ctx context.Context, tn int32) (
+	*model.Champion, error,
+) {
+	pbChamp, err := s.wwdatabaseGRPCClient.GetChampionByOrderNumber(ctx, &pb.ChampionNumber{
+		TitleHolderOrderNumber: tn,
+	})
+	if err != nil {
+		return nil, s.handleErr(err)
+	}
+
+	return pbChampionToModel(pbChamp.Champion), nil
+}
+
 func pbChampionsToModel(pbC *pb.ChampionsList) *model.ChampionPayload {
 	champions := []*model.Champion{}
 
 	for _, champion := range pbC.Champions {
 		titlehn := int(champion.TitleHolderNumber)
+		titlehnon := int(champion.TitleHolderOrderNumber)
 		dw := champion.DateWon.String()
 		dl := champion.DateLost.String()
 		c := &model.Champion{
-			TitleHolder:       champion.TitleHolder,
-			TitleHolderNumber: &titlehn,
-			DateWon:           dw,
-			DateLost:          &dl,
-			Show:              champion.Show,
-			CurrentChampion:   &champion.CurrentChampion,
+			TitleHolder:            champion.TitleHolder,
+			TitleHolderNumber:      &titlehn,
+			TitleHolderOrderNumber: &titlehnon,
+			DateWon:                dw,
+			DateLost:               &dl,
+			Show:                   champion.Show,
+			CurrentChampion:        &champion.CurrentChampion,
 		}
 		champions = append(champions, c)
 	}
@@ -104,15 +119,18 @@ func pbChampionsToModel(pbC *pb.ChampionsList) *model.ChampionPayload {
 
 func pbChampionToModel(pbC *pb.Champion) *model.Champion {
 	titlehn := int(pbC.TitleHolderNumber)
+	titlehnon := int(pbC.TitleHolderOrderNumber)
 	dw := pbC.DateWon.String()
 	dl := pbC.DateLost.String()
 
 	return &model.Champion{
-		TitleHolder:       pbC.TitleHolder,
-		TitleHolderNumber: &titlehn,
-		DateWon:           dw,
-		DateLost:          &dl,
-		Show:              pbC.Show,
-		CurrentChampion:   &pbC.CurrentChampion,
+		TitleHolder:            pbC.TitleHolder,
+		TitleHolderNumber:      &titlehn,
+		TitleHolderOrderNumber: &titlehnon,
+		DateWon:                dw,
+		DateLost:               &dl,
+		Show:                   pbC.Show,
+		CurrentChampion:        &pbC.CurrentChampion,
+		PreviousChampion:       &pbC.PreviousChampion,
 	}
 }

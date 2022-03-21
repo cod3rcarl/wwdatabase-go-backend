@@ -79,7 +79,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Champion  func(childComplexity int, titleHolder *string, currentChampion *bool, dateFilter *string, previousChampion *int) int
-		Champions func(childComplexity int, filter *string, orderBy *model.ChampionOrderByInput) int
+		Champions func(childComplexity int, filter *string, dateRange *model.DateRange) int
 	}
 
 	UpdateChampionPayload struct {
@@ -95,7 +95,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Champion(ctx context.Context, titleHolder *string, currentChampion *bool, dateFilter *string, previousChampion *int) (*model.Champion, error)
-	Champions(ctx context.Context, filter *string, orderBy *model.ChampionOrderByInput) (*model.ChampionPayload, error)
+	Champions(ctx context.Context, filter *string, dateRange *model.DateRange) (*model.ChampionPayload, error)
 }
 
 type executableSchema struct {
@@ -283,7 +283,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Champions(childComplexity, args["filter"].(*string), args["orderBy"].(*model.ChampionOrderByInput)), true
+		return e.complexity.Query.Champions(childComplexity, args["filter"].(*string), args["dateRange"].(*model.DateRange)), true
 
 	case "UpdateChampionPayload.champion":
 		if e.complexity.UpdateChampionPayload.Champion == nil {
@@ -380,7 +380,7 @@ type Query {
     dateFilter: Date
     previousChampion: Int
   ): Champion!
-  champions(filter: String, orderBy: ChampionOrderByInput): ChampionPayload!
+  champions(filter: String, dateRange: DateRange): ChampionPayload!
 }
 
 scalar Date
@@ -401,6 +401,11 @@ type Champion {
 type ChampionPayload {
   champions: [Champion!]
   totalCount: Int
+}
+
+input DateRange {
+  dateWon: Date!
+  dateLost: Date!
 }
 
 input DeleteChampionInput {
@@ -565,15 +570,15 @@ func (ec *executionContext) field_Query_champions_args(ctx context.Context, rawA
 		}
 	}
 	args["filter"] = arg0
-	var arg1 *model.ChampionOrderByInput
-	if tmp, ok := rawArgs["orderBy"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
-		arg1, err = ec.unmarshalOChampionOrderByInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionOrderByInput(ctx, tmp)
+	var arg1 *model.DateRange
+	if tmp, ok := rawArgs["dateRange"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateRange"))
+		arg1, err = ec.unmarshalODateRange2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐDateRange(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["orderBy"] = arg1
+	args["dateRange"] = arg1
 	return args, nil
 }
 
@@ -1341,7 +1346,7 @@ func (ec *executionContext) _Query_champions(ctx context.Context, field graphql.
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Champions(rctx, args["filter"].(*string), args["orderBy"].(*model.ChampionOrderByInput))
+		return ec.resolvers.Query().Champions(rctx, args["filter"].(*string), args["dateRange"].(*model.DateRange))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2755,6 +2760,37 @@ func (ec *executionContext) unmarshalInputCreateChampionInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDateRange(ctx context.Context, obj interface{}) (model.DateRange, error) {
+	var it model.DateRange
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "dateWon":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateWon"))
+			it.DateWon, err = ec.unmarshalNDate2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "dateLost":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateLost"))
+			it.DateLost, err = ec.unmarshalNDate2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputDeleteChampionInput(ctx context.Context, obj interface{}) (model.DeleteChampionInput, error) {
 	var it model.DeleteChampionInput
 	asMap := map[string]interface{}{}
@@ -4120,14 +4156,6 @@ func (ec *executionContext) marshalOChampion2ᚕᚖgithubᚗcomᚋcod3rcarlᚋww
 	return ret
 }
 
-func (ec *executionContext) unmarshalOChampionOrderByInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionOrderByInput(ctx context.Context, v interface{}) (*model.ChampionOrderByInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputChampionOrderByInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalODate2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -4142,6 +4170,14 @@ func (ec *executionContext) marshalODate2ᚖstring(ctx context.Context, sel ast.
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalODateRange2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐDateRange(ctx context.Context, v interface{}) (*model.DateRange, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDateRange(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {

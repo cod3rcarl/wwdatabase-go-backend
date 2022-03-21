@@ -7,13 +7,14 @@ import (
 
 func ModelToPBChampion(c *Champion) *pb.Champion {
 	champion := &pb.Champion{
-		Id:                c.ID,
-		TitleHolder:       c.TitleHolder,
-		TitleHolderNumber: c.TitleHolderNumber,
-		DateWon:           &timestamppb.Timestamp{Seconds: c.DateWon.Unix()},
-		DateLost:          &timestamppb.Timestamp{Seconds: c.DateLost.Unix()},
-		Show:              c.Show,
-		CurrentChampion:   c.CurrentChampion,
+		Id:                     c.ID,
+		TitleHolder:            c.TitleHolder,
+		TitleHolderNumber:      c.TitleHolderNumber,
+		TitleHolderOrderNumber: c.TitleHolderOrderNumber,
+		DateWon:                &timestamppb.Timestamp{Seconds: c.DateWon.Unix()},
+		DateLost:               &timestamppb.Timestamp{Seconds: c.DateLost.Unix()},
+		Show:                   c.Show,
+		CurrentChampion:        c.CurrentChampion,
 	}
 
 	return champion
