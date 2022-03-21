@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	PostgresUser     string `mapstructure:"POSTGRES_USER"`
+	PostgresUser     string `mapstructure:"postgres-user"`
 	PostgresPassword string `mapstructure:"POSTGRES_PASSWORD"`
 	PostgresDB       string `mapstructure:"POSTGRES_DB"`
 	PostgresPort     string `mapstructure:"POSTGRES_PORT"`

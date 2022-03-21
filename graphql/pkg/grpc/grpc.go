@@ -9,6 +9,7 @@ import (
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/server"
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/storage"
 	ww "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/wwdatabase"
+	"github.com/cod3rcarl/wwdatabase-go-backend/util"
 
 	"go.uber.org/zap"
 )
@@ -54,7 +55,7 @@ func CreateGrpcServer(
 	storeService storage.ServiceInterface,
 	c ww.ServiceInterface,
 ) *server.Service {
-	cfg, err := server.ReadConfig()
+	cfg, err := util.LoadConfig("./../../../../")
 	if err != nil {
 		l.Fatal(
 			"failed to read config",
