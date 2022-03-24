@@ -11,6 +11,7 @@ type Champion struct {
 	Show                   string        `db:"show" json:"show"`
 	CurrentChampion        bool          `db:"current_champion" json:"currentChampion"`
 	TitleHolderOrderNumber int32         `db:"title_holder_order_number" json:"titleHolderOrderNumber"`
+	WrestlerID             int32         `db:"wrestler_id" json:"wrestler_id"`
 }
 
 type Champions []*Champion
@@ -20,14 +21,21 @@ type ChampionList struct {
 }
 
 type CreateChampionInput struct {
-	TitleHolder string
-	DateWon     date.NullTime
-	Show        string
+	TitleHolder            string
+	TitleHolderNumber      int32
+	TitleHolderOrderNumber int32
+	WrestlerID             int32
+	DateWon                date.NullTime
+	Show                   string
 }
 
 type UpdateChampionInput struct {
-	TitleHolderNumber      int32
-	TitleHolderOrderNumber int32
-	CurrentChampion        bool
-	DateLost               date.NullTime
+	ID              string
+	CurrentChampion bool
+	DateLost        date.NullTime
+}
+
+type YearInput struct {
+	StartDate date.NullTime
+	EndDate   date.NullTime
 }

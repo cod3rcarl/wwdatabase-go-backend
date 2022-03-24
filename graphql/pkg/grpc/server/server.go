@@ -3,9 +3,8 @@ package server
 import (
 	"context"
 
-	"github.com/pkg/errors"
-
 	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
+	"github.com/pkg/errors"
 )
 
 func (s *Service) GetChampions(ctx context.Context, req *pb.GetChampionsRequest) (
@@ -13,6 +12,61 @@ func (s *Service) GetChampions(ctx context.Context, req *pb.GetChampionsRequest)
 ) {
 	s.logger.Info("gRPC call: GetAllChampions")
 	pbMc, err := s.wwdatabase.GetAllChampions(ctx, req)
+	if err != nil {
+		return nil, errors.Errorf("error in grpc call", err)
+	}
+
+	return pbMc, nil
+}
+
+func (s *Service) GetChampionsByShow(ctx context.Context, req *pb.GetChampionsByShowRequest) (
+	*pb.ChampionsList, error,
+) {
+	s.logger.Info("gRPC call: GetChampionsByShow")
+
+	show := req.GetShow()
+	if show == "" {
+		return nil, errors.New("must provide a show name")
+	}
+
+	pbMc, err := s.wwdatabase.GetChampionsByShow(ctx, show)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting champ")
+	}
+
+	return pbMc, nil
+}
+
+func (s *Service) GetChampionsByYear(ctx context.Context, req *pb.GetChampionsByYearRequest) (
+	*pb.ChampionsList, error,
+) {
+	s.logger.Info("gRPC call: GetChampionsByYear")
+
+	pbMc, err := s.wwdatabase.GetChampionsByYear(ctx, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting champ")
+	}
+
+	return pbMc, nil
+}
+
+func (s *Service) GetCurrentChampion(ctx context.Context, req *pb.GetCurrentChampionRequest) (
+	*pb.ChampionResponse, error,
+) {
+	s.logger.Info("gRPC call: GetCurrentChampions")
+	pbMc, err := s.wwdatabase.GetCurrentChampion(ctx, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting champ")
+	}
+
+	return pbMc, nil
+}
+
+func (s *Service) GetChampionByDate(ctx context.Context, req *pb.GetChampionByDateRequest) (
+	*pb.ChampionResponse, error,
+) {
+	s.logger.Info("gRPC call: GetChampionByDate")
+	pbMc, err := s.wwdatabase.GetChampionByDate(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting champ")
 	}
@@ -68,7 +122,7 @@ func (s *Service) DeleteChampion(ctx context.Context, req *pb.DeleteChampionRequ
 	s.logger.Info("gRPC call: DeleteChampion")
 	i, err := s.wwdatabase.DeleteChampion(ctx, req.Id)
 	if err != nil {
-		return nil, errors.New("Cannot delete champs")
+		return nil, errors.Errorf("error in grpc call", err)
 	}
 
 	return i, nil

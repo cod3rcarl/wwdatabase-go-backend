@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	wwErrors "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/errors"
+	wwErrors "github.com/cod3rcarl/wwdatabase-go-backend/graphql/client"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"

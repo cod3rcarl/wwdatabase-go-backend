@@ -1,3 +1,4 @@
 .env
 .golanci.yaml
 app.env
+Makefile

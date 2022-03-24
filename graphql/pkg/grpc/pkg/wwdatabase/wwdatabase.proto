@@ -12,6 +12,8 @@ service Wwdatabase {
   rpc GetChampionByName (GetChampionByNameRequest) returns (ChampionsList) {}
   rpc GetCurrentChampion (GetCurrentChampionRequest) returns (ChampionResponse) {}
   rpc GetChampionByDate (GetChampionByDateRequest) returns (ChampionResponse) {}
+  rpc GetChampionsByShow (GetChampionsByShowRequest) returns (ChampionsList) {}
+  rpc GetChampionsByYear (GetChampionsByYearRequest) returns (ChampionsList) {}
   rpc GetChampionByOrderNumber (ChampionNumber) returns (ChampionResponse) {}
   rpc AddChampion (NewChampionData) returns (CreateChampionPayload) {}
   rpc UpdateChampion (UpdateChampionData) returns (UpdateChampionPayload) {}
@@ -53,9 +55,19 @@ message GetChampionByNameRequest {
   string name = 1;
 }
 
+message GetChampionsByShowRequest {
+  string show = 1;
+}
+
 message GetChampionByDateRequest {
   google.protobuf.Timestamp date = 1;
 }
+
+message GetChampionsByYearRequest {
+  google.protobuf.Timestamp start_date = 1;
+  google.protobuf.Timestamp end_date = 2;
+}
+
 
 message Champion {
   string id = 1;
@@ -67,6 +79,7 @@ message Champion {
   bool current_champion = 7;
   string previous_champion = 8;
   int32 title_holder_order_number = 9;
+  int32 wrestler_id = 10;
 }
 
 message ChampionsList {

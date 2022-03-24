@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -48,25 +49,41 @@ type ComplexityRoot struct {
 		DateLost               func(childComplexity int) int
 		DateWon                func(childComplexity int) int
 		DaysAsChampion         func(childComplexity int) int
+		ID                     func(childComplexity int) int
 		NumberOfReigns         func(childComplexity int) int
 		PreviousChampion       func(childComplexity int) int
 		Show                   func(childComplexity int) int
 		TitleHolder            func(childComplexity int) int
 		TitleHolderNumber      func(childComplexity int) int
 		TitleHolderOrderNumber func(childComplexity int) int
+		WrestlerID             func(childComplexity int) int
+	}
+
+	ChampionNoResultsReturned struct {
+		Index   func(childComplexity int) int
+		Message func(childComplexity int) int
+		Path    func(childComplexity int) int
 	}
 
 	ChampionPayload struct {
+		Champion func(childComplexity int) int
+		Errors   func(childComplexity int) int
+	}
+
+	ChampionsPayload struct {
 		Champions  func(childComplexity int) int
+		Errors     func(childComplexity int) int
 		TotalCount func(childComplexity int) int
 	}
 
 	CreateChampionPayload struct {
 		Champion func(childComplexity int) int
+		Errors   func(childComplexity int) int
 		Success  func(childComplexity int) int
 	}
 
 	DeleteChampionPayload struct {
+		Errors  func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Success func(childComplexity int) int
 	}
@@ -74,28 +91,21 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateChampion func(childComplexity int, input model.CreateChampionInput) int
 		DeleteChampion func(childComplexity int, input model.DeleteChampionInput) int
-		UpdateChampion func(childComplexity int, input model.UpdateChampionInput) int
 	}
 
 	Query struct {
-		Champion  func(childComplexity int, titleHolder *string, currentChampion *bool, dateFilter *string, previousChampion *int) int
-		Champions func(childComplexity int, filter *string, dateRange *model.DateRange) int
-	}
-
-	UpdateChampionPayload struct {
-		Champion func(childComplexity int) int
-		Success  func(childComplexity int) int
+		Champion  func(childComplexity int, filter *model.ChampionFilterInput) int
+		Champions func(childComplexity int, filter *model.ChampionsFilterInput) int
 	}
 }
 
 type MutationResolver interface {
 	CreateChampion(ctx context.Context, input model.CreateChampionInput) (*model.CreateChampionPayload, error)
-	UpdateChampion(ctx context.Context, input model.UpdateChampionInput) (*model.UpdateChampionPayload, error)
 	DeleteChampion(ctx context.Context, input model.DeleteChampionInput) (*model.DeleteChampionPayload, error)
 }
 type QueryResolver interface {
-	Champion(ctx context.Context, titleHolder *string, currentChampion *bool, dateFilter *string, previousChampion *int) (*model.Champion, error)
-	Champions(ctx context.Context, filter *string, dateRange *model.DateRange) (*model.ChampionPayload, error)
+	Champion(ctx context.Context, filter *model.ChampionFilterInput) (*model.ChampionPayload, error)
+	Champions(ctx context.Context, filter *model.ChampionsFilterInput) (*model.ChampionsPayload, error)
 }
 
 type executableSchema struct {
@@ -141,6 +151,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Champion.DaysAsChampion(childComplexity), true
 
+	case "Champion.id":
+		if e.complexity.Champion.ID == nil {
+			break
+		}
+
+		return e.complexity.Champion.ID(childComplexity), true
+
 	case "Champion.numberOfReigns":
 		if e.complexity.Champion.NumberOfReigns == nil {
 			break
@@ -183,19 +200,68 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Champion.TitleHolderOrderNumber(childComplexity), true
 
-	case "ChampionPayload.champions":
-		if e.complexity.ChampionPayload.Champions == nil {
+	case "Champion.wrestlerId":
+		if e.complexity.Champion.WrestlerID == nil {
 			break
 		}
 
-		return e.complexity.ChampionPayload.Champions(childComplexity), true
+		return e.complexity.Champion.WrestlerID(childComplexity), true
 
-	case "ChampionPayload.totalCount":
-		if e.complexity.ChampionPayload.TotalCount == nil {
+	case "ChampionNoResultsReturned.index":
+		if e.complexity.ChampionNoResultsReturned.Index == nil {
 			break
 		}
 
-		return e.complexity.ChampionPayload.TotalCount(childComplexity), true
+		return e.complexity.ChampionNoResultsReturned.Index(childComplexity), true
+
+	case "ChampionNoResultsReturned.message":
+		if e.complexity.ChampionNoResultsReturned.Message == nil {
+			break
+		}
+
+		return e.complexity.ChampionNoResultsReturned.Message(childComplexity), true
+
+	case "ChampionNoResultsReturned.path":
+		if e.complexity.ChampionNoResultsReturned.Path == nil {
+			break
+		}
+
+		return e.complexity.ChampionNoResultsReturned.Path(childComplexity), true
+
+	case "ChampionPayload.champion":
+		if e.complexity.ChampionPayload.Champion == nil {
+			break
+		}
+
+		return e.complexity.ChampionPayload.Champion(childComplexity), true
+
+	case "ChampionPayload.errors":
+		if e.complexity.ChampionPayload.Errors == nil {
+			break
+		}
+
+		return e.complexity.ChampionPayload.Errors(childComplexity), true
+
+	case "ChampionsPayload.champions":
+		if e.complexity.ChampionsPayload.Champions == nil {
+			break
+		}
+
+		return e.complexity.ChampionsPayload.Champions(childComplexity), true
+
+	case "ChampionsPayload.errors":
+		if e.complexity.ChampionsPayload.Errors == nil {
+			break
+		}
+
+		return e.complexity.ChampionsPayload.Errors(childComplexity), true
+
+	case "ChampionsPayload.totalCount":
+		if e.complexity.ChampionsPayload.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.ChampionsPayload.TotalCount(childComplexity), true
 
 	case "CreateChampionPayload.champion":
 		if e.complexity.CreateChampionPayload.Champion == nil {
@@ -204,12 +270,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CreateChampionPayload.Champion(childComplexity), true
 
+	case "CreateChampionPayload.errors":
+		if e.complexity.CreateChampionPayload.Errors == nil {
+			break
+		}
+
+		return e.complexity.CreateChampionPayload.Errors(childComplexity), true
+
 	case "CreateChampionPayload.success":
 		if e.complexity.CreateChampionPayload.Success == nil {
 			break
 		}
 
 		return e.complexity.CreateChampionPayload.Success(childComplexity), true
+
+	case "DeleteChampionPayload.errors":
+		if e.complexity.DeleteChampionPayload.Errors == nil {
+			break
+		}
+
+		return e.complexity.DeleteChampionPayload.Errors(childComplexity), true
 
 	case "DeleteChampionPayload.id":
 		if e.complexity.DeleteChampionPayload.ID == nil {
@@ -249,18 +329,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteChampion(childComplexity, args["input"].(model.DeleteChampionInput)), true
 
-	case "Mutation.updateChampion":
-		if e.complexity.Mutation.UpdateChampion == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateChampion_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateChampion(childComplexity, args["input"].(model.UpdateChampionInput)), true
-
 	case "Query.champion":
 		if e.complexity.Query.Champion == nil {
 			break
@@ -271,7 +339,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Champion(childComplexity, args["titleHolder"].(*string), args["currentChampion"].(*bool), args["dateFilter"].(*string), args["previousChampion"].(*int)), true
+		return e.complexity.Query.Champion(childComplexity, args["filter"].(*model.ChampionFilterInput)), true
 
 	case "Query.champions":
 		if e.complexity.Query.Champions == nil {
@@ -283,21 +351,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Champions(childComplexity, args["filter"].(*string), args["dateRange"].(*model.DateRange)), true
-
-	case "UpdateChampionPayload.champion":
-		if e.complexity.UpdateChampionPayload.Champion == nil {
-			break
-		}
-
-		return e.complexity.UpdateChampionPayload.Champion(childComplexity), true
-
-	case "UpdateChampionPayload.success":
-		if e.complexity.UpdateChampionPayload.Success == nil {
-			break
-		}
-
-		return e.complexity.UpdateChampionPayload.Success(childComplexity), true
+		return e.complexity.Query.Champions(childComplexity, args["filter"].(*model.ChampionsFilterInput)), true
 
 	}
 	return 0, false
@@ -363,29 +417,37 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "graphql/api/graphql/errors.graphqls", Input: `interface NewError {
+  index: Int!
+  message: String!
+  path: [String!]!
+}
+
+type ChampionNoResultsReturned implements NewError {
+  index: Int!
+  message: String!
+  path: [String!]!
+}
+`, BuiltIn: false},
 	{Name: "graphql/api/graphql/schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
 type Mutation {
   createChampion(input: CreateChampionInput!): CreateChampionPayload!
-  updateChampion(input: UpdateChampionInput!): UpdateChampionPayload!
   deleteChampion(input: DeleteChampionInput!): DeleteChampionPayload!
 }
 
 type Query {
-  champion(
-    titleHolder: String
-    currentChampion: Boolean
-    dateFilter: Date
-    previousChampion: Int
-  ): Champion!
-  champions(filter: String, dateRange: DateRange): ChampionPayload!
+  champion(filter: ChampionFilterInput): ChampionPayload!
+  champions(filter: ChampionsFilterInput): ChampionsPayload!
 }
 
 scalar Date
+scalar ChampionId
 
 type Champion {
+  id: ChampionId!
   titleHolder: String!
   titleHolderNumber: Int
   titleHolderOrderNumber: Int
@@ -396,16 +458,35 @@ type Champion {
   daysAsChampion: Int
   previousChampion: String
   currentChampion: Boolean
+  wrestlerId: Int!
+}
+
+type ChampionsPayload {
+  champions: [Champion!]
+  totalCount: Int!
+  errors: [NewError!]
 }
 
 type ChampionPayload {
-  champions: [Champion!]
-  totalCount: Int
+  champion: Champion
+  errors: [NewError!]
 }
 
-input DateRange {
-  dateWon: Date!
-  dateLost: Date!
+input ChampionsFilterInput {
+  titleHolder: String
+  year: YearInput
+  show: String
+}
+
+input YearInput {
+  start: Date
+  end: Date
+}
+
+input ChampionFilterInput {
+  date: Date
+  currentChampion: Boolean
+  previousChampion: Int
 }
 
 input DeleteChampionInput {
@@ -415,28 +496,18 @@ input DeleteChampionInput {
 type CreateChampionPayload {
   success: Boolean!
   champion: Champion!
+  errors: [NewError!]
 }
 
 type DeleteChampionPayload {
   success: Boolean!
   id: String!
+  errors: [NewError!]
 }
 input CreateChampionInput {
   titleHolder: String!
   dateWon: String
   show: String!
-}
-
-type UpdateChampionPayload {
-  success: Boolean!
-  champion: Champion!
-}
-
-input UpdateChampionInput {
-  titleHolderNumber: Int
-  titleHolderOrderNumber: Int
-  dateLost: Date
-  currentChampion: Boolean
 }
 
 input ChampionOrderByInput {
@@ -486,21 +557,6 @@ func (ec *executionContext) field_Mutation_deleteChampion_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateChampion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.UpdateChampionInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateChampionInput2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐUpdateChampionInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -519,66 +575,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_champion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["titleHolder"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleHolder"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+	var arg0 *model.ChampionFilterInput
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg0, err = ec.unmarshalOChampionFilterInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionFilterInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["titleHolder"] = arg0
-	var arg1 *bool
-	if tmp, ok := rawArgs["currentChampion"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentChampion"))
-		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["currentChampion"] = arg1
-	var arg2 *string
-	if tmp, ok := rawArgs["dateFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateFilter"))
-		arg2, err = ec.unmarshalODate2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["dateFilter"] = arg2
-	var arg3 *int
-	if tmp, ok := rawArgs["previousChampion"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("previousChampion"))
-		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["previousChampion"] = arg3
+	args["filter"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_champions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 *model.ChampionsFilterInput
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalOChampionsFilterInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionsFilterInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["filter"] = arg0
-	var arg1 *model.DateRange
-	if tmp, ok := rawArgs["dateRange"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateRange"))
-		arg1, err = ec.unmarshalODateRange2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐDateRange(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["dateRange"] = arg1
 	return args, nil
 }
 
@@ -619,6 +639,41 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Champion_id(ctx context.Context, field graphql.CollectedField, obj *model.Champion) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Champion",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNChampionId2string(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Champion_titleHolder(ctx context.Context, field graphql.CollectedField, obj *model.Champion) (ret graphql.Marshaler) {
 	defer func() {
@@ -949,7 +1004,147 @@ func (ec *executionContext) _Champion_currentChampion(ctx context.Context, field
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChampionPayload_champions(ctx context.Context, field graphql.CollectedField, obj *model.ChampionPayload) (ret graphql.Marshaler) {
+func (ec *executionContext) _Champion_wrestlerId(ctx context.Context, field graphql.CollectedField, obj *model.Champion) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Champion",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WrestlerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionNoResultsReturned_index(ctx context.Context, field graphql.CollectedField, obj *model.ChampionNoResultsReturned) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChampionNoResultsReturned",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Index, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionNoResultsReturned_message(ctx context.Context, field graphql.CollectedField, obj *model.ChampionNoResultsReturned) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChampionNoResultsReturned",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionNoResultsReturned_path(ctx context.Context, field graphql.CollectedField, obj *model.ChampionNoResultsReturned) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChampionNoResultsReturned",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionPayload_champion(ctx context.Context, field graphql.CollectedField, obj *model.ChampionPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -958,6 +1153,70 @@ func (ec *executionContext) _ChampionPayload_champions(ctx context.Context, fiel
 	}()
 	fc := &graphql.FieldContext{
 		Object:     "ChampionPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Champion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Champion)
+	fc.Result = res
+	return ec.marshalOChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionPayload_errors(ctx context.Context, field graphql.CollectedField, obj *model.ChampionPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChampionPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.NewError)
+	fc.Result = res
+	return ec.marshalONewError2ᚕgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewErrorᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionsPayload_champions(ctx context.Context, field graphql.CollectedField, obj *model.ChampionsPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChampionsPayload",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -981,7 +1240,7 @@ func (ec *executionContext) _ChampionPayload_champions(ctx context.Context, fiel
 	return ec.marshalOChampion2ᚕᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChampionPayload_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.ChampionPayload) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChampionsPayload_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.ChampionsPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -989,7 +1248,7 @@ func (ec *executionContext) _ChampionPayload_totalCount(ctx context.Context, fie
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChampionPayload",
+		Object:     "ChampionsPayload",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1006,11 +1265,46 @@ func (ec *executionContext) _ChampionPayload_totalCount(ctx context.Context, fie
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChampionsPayload_errors(ctx context.Context, field graphql.CollectedField, obj *model.ChampionsPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChampionsPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.NewError)
+	fc.Result = res
+	return ec.marshalONewError2ᚕgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewErrorᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CreateChampionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.CreateChampionPayload) (ret graphql.Marshaler) {
@@ -1083,6 +1377,38 @@ func (ec *executionContext) _CreateChampionPayload_champion(ctx context.Context,
 	return ec.marshalNChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CreateChampionPayload_errors(ctx context.Context, field graphql.CollectedField, obj *model.CreateChampionPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CreateChampionPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.NewError)
+	fc.Result = res
+	return ec.marshalONewError2ᚕgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewErrorᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _DeleteChampionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteChampionPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1153,6 +1479,38 @@ func (ec *executionContext) _DeleteChampionPayload_id(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _DeleteChampionPayload_errors(ctx context.Context, field graphql.CollectedField, obj *model.DeleteChampionPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "DeleteChampionPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.NewError)
+	fc.Result = res
+	return ec.marshalONewError2ᚕgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewErrorᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createChampion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1193,48 +1551,6 @@ func (ec *executionContext) _Mutation_createChampion(ctx context.Context, field 
 	res := resTmp.(*model.CreateChampionPayload)
 	fc.Result = res
 	return ec.marshalNCreateChampionPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐCreateChampionPayload(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_updateChampion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateChampion_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateChampion(rctx, args["input"].(model.UpdateChampionInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.UpdateChampionPayload)
-	fc.Result = res
-	return ec.marshalNUpdateChampionPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐUpdateChampionPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteChampion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1304,7 +1620,7 @@ func (ec *executionContext) _Query_champion(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Champion(rctx, args["titleHolder"].(*string), args["currentChampion"].(*bool), args["dateFilter"].(*string), args["previousChampion"].(*int))
+		return ec.resolvers.Query().Champion(rctx, args["filter"].(*model.ChampionFilterInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1316,9 +1632,9 @@ func (ec *executionContext) _Query_champion(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Champion)
+	res := resTmp.(*model.ChampionPayload)
 	fc.Result = res
-	return ec.marshalNChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx, field.Selections, res)
+	return ec.marshalNChampionPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_champions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1346,7 +1662,7 @@ func (ec *executionContext) _Query_champions(ctx context.Context, field graphql.
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Champions(rctx, args["filter"].(*string), args["dateRange"].(*model.DateRange))
+		return ec.resolvers.Query().Champions(rctx, args["filter"].(*model.ChampionsFilterInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1358,9 +1674,9 @@ func (ec *executionContext) _Query_champions(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.ChampionPayload)
+	res := resTmp.(*model.ChampionsPayload)
 	fc.Result = res
-	return ec.marshalNChampionPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionPayload(ctx, field.Selections, res)
+	return ec.marshalNChampionsPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionsPayload(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1432,76 +1748,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _UpdateChampionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.UpdateChampionPayload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "UpdateChampionPayload",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Success, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _UpdateChampionPayload_champion(ctx context.Context, field graphql.CollectedField, obj *model.UpdateChampionPayload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "UpdateChampionPayload",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Champion, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Champion)
-	fc.Result = res
-	return ec.marshalNChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2690,6 +2936,45 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputChampionFilterInput(ctx context.Context, obj interface{}) (model.ChampionFilterInput, error) {
+	var it model.ChampionFilterInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "date":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
+			it.Date, err = ec.unmarshalODate2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "currentChampion":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentChampion"))
+			it.CurrentChampion, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "previousChampion":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("previousChampion"))
+			it.PreviousChampion, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputChampionOrderByInput(ctx context.Context, obj interface{}) (model.ChampionOrderByInput, error) {
 	var it model.ChampionOrderByInput
 	asMap := map[string]interface{}{}
@@ -2712,6 +2997,45 @@ func (ec *executionContext) unmarshalInputChampionOrderByInput(ctx context.Conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("daysAsChampion"))
 			it.DaysAsChampion, err = ec.unmarshalOSort2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐSort(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChampionsFilterInput(ctx context.Context, obj interface{}) (model.ChampionsFilterInput, error) {
+	var it model.ChampionsFilterInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "titleHolder":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleHolder"))
+			it.TitleHolder, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "year":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			it.Year, err = ec.unmarshalOYearInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐYearInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "show":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("show"))
+			it.Show, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2760,37 +3084,6 @@ func (ec *executionContext) unmarshalInputCreateChampionInput(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDateRange(ctx context.Context, obj interface{}) (model.DateRange, error) {
-	var it model.DateRange
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	for k, v := range asMap {
-		switch k {
-		case "dateWon":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateWon"))
-			it.DateWon, err = ec.unmarshalNDate2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "dateLost":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateLost"))
-			it.DateLost, err = ec.unmarshalNDate2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputDeleteChampionInput(ctx context.Context, obj interface{}) (model.DeleteChampionInput, error) {
 	var it model.DeleteChampionInput
 	asMap := map[string]interface{}{}
@@ -2814,8 +3107,8 @@ func (ec *executionContext) unmarshalInputDeleteChampionInput(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateChampionInput(ctx context.Context, obj interface{}) (model.UpdateChampionInput, error) {
-	var it model.UpdateChampionInput
+func (ec *executionContext) unmarshalInputYearInput(ctx context.Context, obj interface{}) (model.YearInput, error) {
+	var it model.YearInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -2823,35 +3116,19 @@ func (ec *executionContext) unmarshalInputUpdateChampionInput(ctx context.Contex
 
 	for k, v := range asMap {
 		switch k {
-		case "titleHolderNumber":
+		case "start":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleHolderNumber"))
-			it.TitleHolderNumber, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
+			it.Start, err = ec.unmarshalODate2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "titleHolderOrderNumber":
+		case "end":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("titleHolderOrderNumber"))
-			it.TitleHolderOrderNumber, err = ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "dateLost":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateLost"))
-			it.DateLost, err = ec.unmarshalODate2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "currentChampion":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentChampion"))
-			it.CurrentChampion, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
+			it.End, err = ec.unmarshalODate2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2864,6 +3141,22 @@ func (ec *executionContext) unmarshalInputUpdateChampionInput(ctx context.Contex
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
+
+func (ec *executionContext) _NewError(ctx context.Context, sel ast.SelectionSet, obj model.NewError) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.ChampionNoResultsReturned:
+		return ec._ChampionNoResultsReturned(ctx, sel, &obj)
+	case *model.ChampionNoResultsReturned:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ChampionNoResultsReturned(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
 
 // endregion ************************** interface.gotpl ***************************
 
@@ -2879,6 +3172,16 @@ func (ec *executionContext) _Champion(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Champion")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Champion_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "titleHolder":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Champion_titleHolder(ctx, field, obj)
@@ -2958,6 +3261,67 @@ func (ec *executionContext) _Champion(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = innerFunc(ctx)
 
+		case "wrestlerId":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Champion_wrestlerId(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var championNoResultsReturnedImplementors = []string{"ChampionNoResultsReturned", "NewError"}
+
+func (ec *executionContext) _ChampionNoResultsReturned(ctx context.Context, sel ast.SelectionSet, obj *model.ChampionNoResultsReturned) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, championNoResultsReturnedImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChampionNoResultsReturned")
+		case "index":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ChampionNoResultsReturned_index(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "message":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ChampionNoResultsReturned_message(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "path":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ChampionNoResultsReturned_path(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2979,16 +3343,61 @@ func (ec *executionContext) _ChampionPayload(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ChampionPayload")
+		case "champion":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ChampionPayload_champion(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "errors":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ChampionPayload_errors(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var championsPayloadImplementors = []string{"ChampionsPayload"}
+
+func (ec *executionContext) _ChampionsPayload(ctx context.Context, sel ast.SelectionSet, obj *model.ChampionsPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, championsPayloadImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChampionsPayload")
 		case "champions":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._ChampionPayload_champions(ctx, field, obj)
+				return ec._ChampionsPayload_champions(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
 
 		case "totalCount":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._ChampionPayload_totalCount(ctx, field, obj)
+				return ec._ChampionsPayload_totalCount(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "errors":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ChampionsPayload_errors(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -3034,6 +3443,13 @@ func (ec *executionContext) _CreateChampionPayload(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "errors":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CreateChampionPayload_errors(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3075,6 +3491,13 @@ func (ec *executionContext) _DeleteChampionPayload(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "errors":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._DeleteChampionPayload_errors(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3108,16 +3531,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createChampion":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createChampion(ctx, field)
-			}
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updateChampion":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateChampion(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -3225,47 +3638,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
 
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var updateChampionPayloadImplementors = []string{"UpdateChampionPayload"}
-
-func (ec *executionContext) _UpdateChampionPayload(ctx context.Context, sel ast.SelectionSet, obj *model.UpdateChampionPayload) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, updateChampionPayloadImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UpdateChampionPayload")
-		case "success":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._UpdateChampionPayload_success(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "champion":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._UpdateChampionPayload_champion(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3715,10 +4087,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNChampion2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx context.Context, sel ast.SelectionSet, v model.Champion) graphql.Marshaler {
-	return ec._Champion(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx context.Context, sel ast.SelectionSet, v *model.Champion) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -3727,6 +4095,21 @@ func (ec *executionContext) marshalNChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdat
 		return graphql.Null
 	}
 	return ec._Champion(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNChampionId2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChampionId2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNChampionPayload2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionPayload(ctx context.Context, sel ast.SelectionSet, v model.ChampionPayload) graphql.Marshaler {
@@ -3741,6 +4124,20 @@ func (ec *executionContext) marshalNChampionPayload2ᚖgithubᚗcomᚋcod3rcarl�
 		return graphql.Null
 	}
 	return ec._ChampionPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChampionsPayload2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionsPayload(ctx context.Context, sel ast.SelectionSet, v model.ChampionsPayload) graphql.Marshaler {
+	return ec._ChampionsPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChampionsPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionsPayload(ctx context.Context, sel ast.SelectionSet, v *model.ChampionsPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ChampionsPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCreateChampionInput2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐCreateChampionInput(ctx context.Context, v interface{}) (model.CreateChampionInput, error) {
@@ -3796,6 +4193,31 @@ func (ec *executionContext) marshalNDeleteChampionPayload2ᚖgithubᚗcomᚋcod3
 	return ec._DeleteChampionPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNNewError2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewError(ctx context.Context, sel ast.SelectionSet, v model.NewError) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._NewError(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3811,23 +4233,36 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNUpdateChampionInput2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐUpdateChampionInput(ctx context.Context, v interface{}) (model.UpdateChampionInput, error) {
-	res, err := ec.unmarshalInputUpdateChampionInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNUpdateChampionPayload2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐUpdateChampionPayload(ctx context.Context, sel ast.SelectionSet, v model.UpdateChampionPayload) graphql.Marshaler {
-	return ec._UpdateChampionPayload(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNUpdateChampionPayload2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐUpdateChampionPayload(ctx context.Context, sel ast.SelectionSet, v *model.UpdateChampionPayload) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
 	}
-	return ec._UpdateChampionPayload(ctx, sel, v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -4156,6 +4591,29 @@ func (ec *executionContext) marshalOChampion2ᚕᚖgithubᚗcomᚋcod3rcarlᚋww
 	return ret
 }
 
+func (ec *executionContext) marshalOChampion2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampion(ctx context.Context, sel ast.SelectionSet, v *model.Champion) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Champion(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOChampionFilterInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionFilterInput(ctx context.Context, v interface{}) (*model.ChampionFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChampionFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOChampionsFilterInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐChampionsFilterInput(ctx context.Context, v interface{}) (*model.ChampionsFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChampionsFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalODate2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -4172,14 +4630,6 @@ func (ec *executionContext) marshalODate2ᚖstring(ctx context.Context, sel ast.
 	return res
 }
 
-func (ec *executionContext) unmarshalODateRange2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐDateRange(ctx context.Context, v interface{}) (*model.DateRange, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputDateRange(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -4194,6 +4644,53 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalONewError2ᚕgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewErrorᚄ(ctx context.Context, sel ast.SelectionSet, v []model.NewError) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNNewError2githubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐNewError(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOSort2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐSort(ctx context.Context, v interface{}) (*model.Sort, error) {
@@ -4226,6 +4723,14 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOYearInput2ᚖgithubᚗcomᚋcod3rcarlᚋwwdatabaseᚑgoᚑbackendᚋgraphqlᚋinternalᚋserverᚋgraphᚋmodelᚐYearInput(ctx context.Context, v interface{}) (*model.YearInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputYearInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

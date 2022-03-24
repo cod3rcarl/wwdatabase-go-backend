@@ -3,20 +3,16 @@ package client
 import (
 	"context"
 
-	"github.com/pkg/errors"
-
-	wwErrors "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/errors"
+	wwErrors "github.com/cod3rcarl/wwdatabase-go-backend/graphql/client"
+	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/date"
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/models"
 	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
+	"github.com/pkg/errors"
 )
 
 func returnChampionList(champions models.Champions, err error) (*pb.ChampionsList, error) {
 	if err != nil {
-		if errors.Is(err, wwErrors.ErrNoChampionsReturned) {
-			return nil, wwErrors.ErrNoChampionsReturned
-		}
-
-		return nil, errors.Wrap(err, "Error getting champions")
+		return nil, errors.Wrap(err, "error in query")
 	}
 	count := len(champions)
 
@@ -47,8 +43,87 @@ func (s *Service) GetChampionByOrderNumber(ctx context.Context, tn *pb.ChampionN
 	}, nil
 }
 
+func (s *Service) GetChampionByDate(ctx context.Context, d *pb.GetChampionByDateRequest) (*pb.ChampionResponse, error) {
+	champion, err := s.store.GetChampionByDate(ctx, date.TimestampToTime(d.Date))
+	if err != nil {
+		if errors.Is(err, wwErrors.ErrNoChampionsReturned) {
+			return nil, wwErrors.ErrNoChampionsReturned
+		}
+
+		return nil, errors.Wrap(err, "Error getting champions")
+
+	}
+
+	return &pb.ChampionResponse{
+		Champion: models.ModelToPBChampion(&champion),
+	}, nil
+}
+
+func (s *Service) GetCurrentChampion(ctx context.Context, cc *pb.GetCurrentChampionRequest) (*pb.ChampionResponse, error) {
+	champion, err := s.store.GetCurrentChampion(ctx, cc.CurrentChampion)
+	if err != nil {
+		if errors.Is(err, wwErrors.ErrNoChampionsReturned) {
+			return nil, wwErrors.ErrNoChampionsReturned
+		}
+
+		return nil, errors.Wrap(err, "Error getting champions")
+
+	}
+
+	return &pb.ChampionResponse{
+		Champion: models.ModelToPBChampion(&champion),
+	}, nil
+}
+
 func (s *Service) GetAllChampions(ctx context.Context, _ *pb.GetChampionsRequest) (*pb.ChampionsList, error) {
 	champions, err := s.store.GetAllChampions(ctx)
+	return returnChampionList(champions, err)
+}
+
+func (s *Service) GetChampionsByShow(ctx context.Context, show string) (*pb.ChampionsList, error) {
+	champions, err := s.store.GetChampionsByShow(ctx, show)
+
+	return returnChampionList(champions, err)
+}
+
+func (s *Service) GetChampionsByYear(ctx context.Context, req *pb.GetChampionsByYearRequest) (*pb.ChampionsList, error) {
+	champions, err := s.store.GetChampionsByYear(ctx, models.YearInput{
+		StartDate: date.TimestampToNullTime(req.StartDate),
+		EndDate:   date.TimestampToNullTime(req.EndDate),
+	})
+	if err != nil {
+		if errors.Is(err, wwErrors.ErrNoChampionsReturned) {
+			return nil, wwErrors.ErrNoChampionsReturned
+		}
+
+		return nil, errors.Wrap(err, "Error getting champions")
+	}
+	num := len(champions)
+
+	if num < 1 {
+		champion1, err2 := s.store.GetChampionByDate(ctx, date.TimestampToTime(req.StartDate))
+		champion2, err2 := s.store.GetChampionByDate(ctx, date.TimestampToTime(req.EndDate))
+		if champion1.DateLost.Unix() == champion2.DateLost.Unix() {
+			return returnChampionList(models.Champions{&champion1}, err2)
+		}
+		return returnChampionList(models.Champions{&champion1, &champion2}, err2)
+	}
+	var prevChamp models.Champion
+
+	if champions[0].TitleHolderNumber != 1 {
+		prevChamp, err = s.store.GetChampionByOrderNumber(ctx, champions[0].TitleHolderOrderNumber-1)
+		if err != nil {
+			prevChamp = models.Champion{}
+		}
+	}
+
+	nextChamp, err := s.store.GetChampionByOrderNumber(ctx, champions[num-1].TitleHolderOrderNumber+1)
+	if err != nil {
+		nextChamp = models.Champion{}
+	}
+
+	champions = append(models.Champions{&prevChamp}, champions...)
+	champions = append(champions, &nextChamp)
 
 	return returnChampionList(champions, err)
 }

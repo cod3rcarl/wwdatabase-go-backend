@@ -6,11 +6,13 @@ import (
 
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/internal/server/graph/model"
 	pb "github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/pkg/wwdatabase"
+	"github.com/pkg/errors"
+
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *Client) CreateChampion(ctx context.Context, input *model.CreateChampionInput) (*model.CreateChampionPayload, error) {
-	dateWon, err := time.Parse("2006-01-02 15:04", *input.DateWon)
+	dateWon, err := time.Parse("2006-01-02", *input.DateWon)
 	if err != nil {
 		return nil, ErrDateIncorrect
 	}
@@ -29,12 +31,14 @@ func (s *Client) CreateChampion(ctx context.Context, input *model.CreateChampion
 	}, nil
 }
 
-func (s *Client) DeleteChampion(ctx context.Context, input *model.DeleteChampionInput) (*model.DeleteChampionPayload, error) {
+func (s *Client) DeleteChampion(ctx context.Context, input *model.DeleteChampionInput) (
+	*model.DeleteChampionPayload, error,
+) {
 	pbChamp, err := s.wwdatabaseGRPCClient.DeleteChampion(ctx, &pb.DeleteChampionRequest{
 		Id: input.ID,
 	})
 	if err != nil {
-		return nil, s.handleErr(err)
+		return nil, errors.Errorf("error in Deletehampion(): %v", err)
 	}
 
 	return &model.DeleteChampionPayload{
@@ -43,20 +47,23 @@ func (s *Client) DeleteChampion(ctx context.Context, input *model.DeleteChampion
 	}, nil
 }
 
-func (s *Client) GetChampions(ctx context.Context, filter *string) (
-	*model.ChampionPayload, error,
+func (s *Client) GetChampions(ctx context.Context) (
+	*model.ChampionsPayload, error,
 ) {
-	if filter != nil {
-		pbChamps, err := s.wwdatabaseGRPCClient.GetChampionByName(ctx, &pb.GetChampionByNameRequest{
-			Name: *filter,
-		})
-		if err != nil {
-			return nil, s.handleErr(err)
-		}
-
-		return pbChampionsToModel(pbChamps), nil
-	}
 	pbChamps, err := s.wwdatabaseGRPCClient.GetChampions(ctx, &pb.GetChampionsRequest{})
+	if err != nil {
+		return nil, errors.Errorf("error in GetAllChampions(): %v", err)
+	}
+
+	return pbChampionsToModel(pbChamps), nil
+}
+
+func (s *Client) GetChampionsByShow(ctx context.Context, show string) (
+	*model.ChampionsPayload, error,
+) {
+	pbChamps, err := s.wwdatabaseGRPCClient.GetChampionsByShow(ctx, &pb.GetChampionsByShowRequest{
+		Show: show,
+	})
 	if err != nil {
 		return nil, s.handleErr(err)
 	}
@@ -64,8 +71,22 @@ func (s *Client) GetChampions(ctx context.Context, filter *string) (
 	return pbChampionsToModel(pbChamps), nil
 }
 
-func (s *Client) GetChampionDetailsByName(ctx context.Context, name string) (
-	*model.ChampionPayload, error,
+func (s *Client) GetChampionsByYear(ctx context.Context, start time.Time, end time.Time) (
+	*model.ChampionsPayload, error,
+) {
+	pbChamps, err := s.wwdatabaseGRPCClient.GetChampionsByYear(ctx, &pb.GetChampionsByYearRequest{
+		StartDate: &timestamppb.Timestamp{Seconds: start.Unix()},
+		EndDate:   &timestamppb.Timestamp{Seconds: end.Unix()},
+	})
+	if err != nil {
+		return nil, s.handleErr(err)
+	}
+
+	return pbChampionsToModel(pbChamps), nil
+}
+
+func (s *Client) GetChampionReignsByName(ctx context.Context, name string) (
+	*model.ChampionsPayload, error,
 ) {
 	pbChamps, err := s.wwdatabaseGRPCClient.GetChampionByName(ctx, &pb.GetChampionByNameRequest{
 		Name: name,
@@ -90,47 +111,79 @@ func (s *Client) GetChampionByOrderNumber(ctx context.Context, tn int32) (
 	return pbChampionToModel(pbChamp.Champion), nil
 }
 
-func pbChampionsToModel(pbC *pb.ChampionsList) *model.ChampionPayload {
+func (s *Client) GetCurrentChampion(ctx context.Context, cc bool) (
+	*model.Champion, error,
+) {
+	pbChamp, err := s.wwdatabaseGRPCClient.GetCurrentChampion(ctx, &pb.GetCurrentChampionRequest{
+		CurrentChampion: cc,
+	})
+	if err != nil {
+		return nil, s.handleErr(err)
+	}
+
+	return pbChampionToModel(pbChamp.Champion), nil
+}
+
+func (s *Client) GetChampionByDate(ctx context.Context, date time.Time) (
+	*model.Champion, error,
+) {
+	pbChamp, err := s.wwdatabaseGRPCClient.GetChampionByDate(ctx, &pb.GetChampionByDateRequest{
+		Date: &timestamppb.Timestamp{Seconds: date.Unix()},
+	})
+	if err != nil {
+		return nil, s.handleErr(err)
+	}
+
+	return pbChampionToModel(pbChamp.Champion), nil
+}
+
+func pbChampionsToModel(pbC *pb.ChampionsList) *model.ChampionsPayload {
 	champions := []*model.Champion{}
 
 	for _, champion := range pbC.Champions {
 		titlehn := int(champion.TitleHolderNumber)
 		titlehnon := int(champion.TitleHolderOrderNumber)
-		dw := champion.DateWon.String()
-		dl := champion.DateLost.String()
+
+		dl := champion.DateLost.AsTime().String()
+
 		c := &model.Champion{
+			ID:                     champion.Id,
 			TitleHolder:            champion.TitleHolder,
 			TitleHolderNumber:      &titlehn,
 			TitleHolderOrderNumber: &titlehnon,
-			DateWon:                dw,
+			DateWon:                champion.DateWon.AsTime().String(),
 			DateLost:               &dl,
 			Show:                   champion.Show,
 			CurrentChampion:        &champion.CurrentChampion,
+			WrestlerID:             int(champion.WrestlerId),
 		}
 		champions = append(champions, c)
 	}
 	count := len(champions)
 
-	return &model.ChampionPayload{
+	return &model.ChampionsPayload{
 		Champions:  champions,
-		TotalCount: &count,
+		Errors:     nil,
+		TotalCount: count,
 	}
 }
 
 func pbChampionToModel(pbC *pb.Champion) *model.Champion {
 	titlehn := int(pbC.TitleHolderNumber)
 	titlehnon := int(pbC.TitleHolderOrderNumber)
-	dw := pbC.DateWon.String()
-	dl := pbC.DateLost.String()
+
+	dl := pbC.DateLost.AsTime().String()
 
 	return &model.Champion{
+		ID:                     pbC.Id,
 		TitleHolder:            pbC.TitleHolder,
 		TitleHolderNumber:      &titlehn,
 		TitleHolderOrderNumber: &titlehnon,
-		DateWon:                dw,
+		DateWon:                pbC.DateWon.AsTime().String(),
 		DateLost:               &dl,
 		Show:                   pbC.Show,
 		CurrentChampion:        &pbC.CurrentChampion,
 		PreviousChampion:       &pbC.PreviousChampion,
+		WrestlerID:             int(pbC.WrestlerId),
 	}
 }

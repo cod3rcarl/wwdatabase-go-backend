@@ -19,7 +19,11 @@ type Service struct {
 
 type ServiceInterface interface {
 	GetAllChampions(ctx context.Context, req *pb.GetChampionsRequest) (*pb.ChampionsList, error)
+	GetChampionsByShow(ctx context.Context, show string) (*pb.ChampionsList, error)
+	GetChampionsByYear(ctx context.Context, req *pb.GetChampionsByYearRequest) (*pb.ChampionsList, error)
+	GetCurrentChampion(ctx context.Context, req *pb.GetCurrentChampionRequest) (*pb.ChampionResponse, error)
 	GetChampionByOrderNumber(ctx context.Context, req *pb.ChampionNumber) (*pb.ChampionResponse, error)
+	GetChampionByDate(ctx context.Context, req *pb.GetChampionByDateRequest) (*pb.ChampionResponse, error)
 	GetChampionListByName(ctx context.Context, name string) (*pb.ChampionsList, error)
 	AddChampion(ctx context.Context, req *pb.NewChampionData) (*pb.CreateChampionPayload, error)
 	DeleteChampion(ctx context.Context, id string) (*pb.DeleteChampionResponse, error)

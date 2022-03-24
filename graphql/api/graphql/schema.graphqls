@@ -4,23 +4,19 @@
 
 type Mutation {
   createChampion(input: CreateChampionInput!): CreateChampionPayload!
-  updateChampion(input: UpdateChampionInput!): UpdateChampionPayload!
   deleteChampion(input: DeleteChampionInput!): DeleteChampionPayload!
 }
 
 type Query {
-  champion(
-    titleHolder: String
-    currentChampion: Boolean
-    dateFilter: Date
-    previousChampion: Int
-  ): Champion!
-  champions(filter: String, dateRange: DateRange): ChampionPayload!
+  champion(filter: ChampionFilterInput): ChampionPayload!
+  champions(filter: ChampionsFilterInput): ChampionsPayload!
 }
 
 scalar Date
+scalar ChampionId
 
 type Champion {
+  id: ChampionId!
   titleHolder: String!
   titleHolderNumber: Int
   titleHolderOrderNumber: Int
@@ -31,16 +27,35 @@ type Champion {
   daysAsChampion: Int
   previousChampion: String
   currentChampion: Boolean
+  wrestlerId: Int!
+}
+
+type ChampionsPayload {
+  champions: [Champion!]
+  totalCount: Int!
+  errors: [NewError!]
 }
 
 type ChampionPayload {
-  champions: [Champion!]
-  totalCount: Int
+  champion: Champion
+  errors: [NewError!]
 }
 
-input DateRange {
-  dateWon: Date!
-  dateLost: Date!
+input ChampionsFilterInput {
+  titleHolder: String
+  year: YearInput
+  show: String
+}
+
+input YearInput {
+  start: Date
+  end: Date
+}
+
+input ChampionFilterInput {
+  date: Date
+  currentChampion: Boolean
+  previousChampion: Int
 }
 
 input DeleteChampionInput {
@@ -50,28 +65,18 @@ input DeleteChampionInput {
 type CreateChampionPayload {
   success: Boolean!
   champion: Champion!
+  errors: [NewError!]
 }
 
 type DeleteChampionPayload {
   success: Boolean!
   id: String!
+  errors: [NewError!]
 }
 input CreateChampionInput {
   titleHolder: String!
   dateWon: String
   show: String!
-}
-
-type UpdateChampionPayload {
-  success: Boolean!
-  champion: Champion!
-}
-
-input UpdateChampionInput {
-  titleHolderNumber: Int
-  titleHolderOrderNumber: Int
-  dateLost: Date
-  currentChampion: Boolean
 }
 
 input ChampionOrderByInput {
