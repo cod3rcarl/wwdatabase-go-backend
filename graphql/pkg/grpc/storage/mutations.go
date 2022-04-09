@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cod3rcarl/wwdatabase-go-backend/graphql/pkg/grpc/models"
 	"github.com/georgysavva/scany/pgxscan"
@@ -12,6 +13,7 @@ import (
 func (s *Service) AddChampion(ctx context.Context, input models.CreateChampionInput) (models.Champion, error) {
 	var createdChamp models.Champion
 	id := uuid.New()
+	fmt.Println(input)
 	query := `
 	INSERT INTO "champion" (
 	"id",
@@ -20,8 +22,8 @@ func (s *Service) AddChampion(ctx context.Context, input models.CreateChampionIn
 	"title_holder_order_number",
 	"date_won",
 	"show",
-	"current_champion",
-	"wrestler_id"
+	"wrestler_id",
+	"current_champion"
 )
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	RETURNING id,title_holder, COALESCE(title_holder_number, 0)
