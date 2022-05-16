@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/mcintosh/go/src/cod3rcarl/wwdatabase-go-backend'
+go mod tidy
+make: Leaving directory `/Users/mcintosh/go/src/cod3rcarl/wwdatabase-go-backend'
+ 

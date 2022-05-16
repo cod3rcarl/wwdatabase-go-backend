@@ -22,6 +22,7 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.1.0 // indirect
+	github.com/cod3rcarl/wwd-protorepo-wwdatabase v0.0.0-20220516110152-370cbccaeec4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
