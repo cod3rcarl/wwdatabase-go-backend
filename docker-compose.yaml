@@ -9,7 +9,7 @@ services:
     volumes:
       - database-data:/var/lib/postgresql/data/
     ports:
-      - "5432:5432"
+      - "5445:5432"
 
   wwdatabase:
     image: cod3rcarl/wwdatabase

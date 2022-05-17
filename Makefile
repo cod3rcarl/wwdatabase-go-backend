@@ -7,23 +7,6 @@ endif
 
 OUT = grpc/pkg/wwdatabase
 
-install-proto:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-proto:
-	protoc --go_out=${OUT} --go_opt=paths=source_relative --go-grpc_out=${OUT} --go-grpc_opt=paths=source_relative grpc/pkg/wwdatabase/wwdatabase.proto
-
-generate:
-	go get github.com/99designs/gqlgen
-	go run github.com/99designs/gqlgen generate
-
-server: ## Run the main application
-	go run grpc/cmd/main.go
-
-app: ## Run the main application
-	go run main.go
-
 tidy: ## Tidy up Go modules
 	go mod tidy
 
@@ -34,3 +17,7 @@ gofumpt: ## Format code with gofumpt
 	gofumpt$(EXT) -l -w .
 
 check: gofumpt cilint tidy ## Format code, run linters and tidy up Go modules
+
+# include environment variables needed for DB_CONNECTION | GRPC_HOST | GRPC_PORT | LOGGER_LEVEL
+run:
+	go run cmd/app/main.go
