@@ -19,8 +19,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "50050:50050"
       - "8181:8181"
-      - "3131:3131"
 volumes:
   database-data:
