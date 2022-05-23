@@ -9,13 +9,14 @@ COPY ./ ./
 
 FROM base AS go-builder
 
-RUN CGO_ENABLED=0 go build \
-  -ldflags "-w -s" \
-  -installsuffix 'static' \
-  -o /wwdatabase cmd/app/main.go
+ENV CGO_ENABLED=0 \
+  GOOS=linux \
+  GOARCH=amd64
+RUN --mount=target=. \
+  --mount=type=cache,target=/root/.cache/go-build \
+  go build -a -tags netgo -ldflags "-w -s" -o "/bin/" ./cmd/...
 
-FROM scratch AS final-image
+FROM scratch AS production
+COPY --from=go-builder /bin/ /bin/
 
-COPY --from=go-builder /wwdatabase /wwdatabase
-
-ENTRYPOINT [ "/wwdatabase" ]
+ENTRYPOINT [ "/bin/app" ]
